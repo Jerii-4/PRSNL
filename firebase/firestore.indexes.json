@@ -1,0 +1,23 @@
+{
+  "indexes": [],
+  "fieldOverrides": [
+    {
+      "collectionGroup": "notes",
+      "fieldPath": "dueTime",
+      "indexes": [
+        {
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "notes",
+      "fieldPath": "completed",
+      "indexes": [
+        {
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ]
+}

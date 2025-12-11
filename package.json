@@ -1,0 +1,23 @@
+{
+  "name": "sticky-ai",
+  "version": "1.0.0",
+  "description": "AI-powered sticky notes with voice activation and email reminders",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"cd client && npm run dev -- --port 5174 --host\" \"cd server && npm run dev\"",
+    "build": "npm run build --workspace=client && npm run build --workspace=server",
+    "start": "npm start --workspace=server",
+    "deploy": "npm run build && npm start"
+  },
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "devDependencies": {
+    "concurrently": "^8.2.1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

@@ -1,0 +1,23 @@
+node_modules/
+*.log
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build
+dist/
+build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Firebase
+.runtimeconfig.json
+serviceAccountKey.json
+firebase-debug.log

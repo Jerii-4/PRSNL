@@ -1,0 +1,51 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build client
+        run: npm run build --workspace=client
+
+      - name: Lint check
+        run: npm run lint --workspace=client 2>/dev/null || true
+
+      - name: Verify server
+        run: |
+          cd server
+          npm run lint 2>/dev/null || true
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: client-build
+          path: client/dist/
+          retention-days: 7
+
+      - name: Ready for deployment
+        run: |
+          echo "✅ Build successful"
+          echo "📦 Artifacts ready for deployment"
+          echo ""
+          echo "Deployment Options:"
+          echo "1. Render.com - Connect GitHub repo directly"
+          echo "2. Railway.app - Use railway CLI"
+          echo "3. Vercel - Use Vercel CLI"
+          echo "4. Custom Server - Use SSH/SCP to deploy"
