@@ -1,23 +1,40 @@
 import { useState, useEffect } from "react";
-import { LogOut, Mic, RotateCcw, Clock } from "lucide-react";
+import { LogOut, Mic, RotateCcw, Clock, Square } from "lucide-react";
 import { SevenDayList } from "./SevenDayList";
 import { NotesCanvas } from "./NotesCanvas";
 import { UndoToast } from "./UndoToast";
+import { NoteEditorModal } from "./NoteEditorModal";
 import { useSyncManager } from "../hooks/useSyncManager";
+import { useSTT } from "../hooks/useSTT";
 
 export function MainLayout({ user, onLogout }) {
   const [notes, setNotes] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [isRecording, setIsRecording] = useState(false);
   const [undoStack, setUndoStack] = useState([]);
   const [showUndoToast, setShowUndoToast] = useState(false);
   const [timeLeft, setTimeLeft] = useState(null);
+  const [editingNote, setEditingNote] = useState(null);
   const { syncNotes } = useSyncManager(user?.uid);
+  const {
+    isRecording,
+    transcript,
+    isProcessing,
+    error: sttError,
+    startRecording,
+    stopRecording,
+  } = useSTT();
 
   useEffect(() => {
     // Load notes from IndexedDB
     loadNotesForDate(selectedDate);
   }, [selectedDate]);
+
+  useEffect(() => {
+    // When transcription returns text, create a note automatically
+    if (transcript) {
+      handleAddNote({ content: transcript, dueTime: null });
+    }
+  }, [transcript]);
 
   const loadNotesForDate = async (date) => {
     // Load from IndexedDB
@@ -39,6 +56,38 @@ export function MainLayout({ user, onLogout }) {
     setUndoStack([...undoStack, { action: "add", note: newNote }]);
     setNotes([...notes, newNote]);
     syncNotes([...notes, newNote]);
+  };
+
+  const handleMoveNote = (noteId, position) => {
+    setNotes((prev) =>
+      prev.map((n) => (n.id === noteId ? { ...n, position } : n))
+    );
+  };
+
+  const handleDeleteNote = (noteId) => {
+    setNotes((prev) => prev.filter((n) => n.id !== noteId));
+  };
+
+  const handleCompleteNote = (noteId) => {
+    setNotes((prev) =>
+      prev.map((n) => (n.id === noteId ? { ...n, completed: true } : n))
+    );
+  };
+
+  const handleEditNote = (noteId) => {
+    const note = notes.find((n) => n.id === noteId);
+    if (note) setEditingNote(note);
+  };
+
+  const handleSaveEdit = (updates) => {
+    setNotes((prev) =>
+      prev.map((n) =>
+        n.id === editingNote.id
+          ? { ...n, ...updates, dueTime: updates.dueTime || null }
+          : n
+      )
+    );
+    setEditingNote(null);
   };
 
   const handleUndo = () => {
@@ -78,17 +127,35 @@ export function MainLayout({ user, onLogout }) {
 
         {/* Timer and Controls */}
         <div className="p-4 border-b border-gray-200 space-y-3">
-          <button
-            onClick={() => setIsRecording(!isRecording)}
-            className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg font-semibold transition-all ${
-              isRecording
-                ? "bg-red-500 text-white animate-pulse"
-                : "bg-blue-500 hover:bg-blue-600 text-white"
-            }`}
-          >
-            <Mic className="w-5 h-5" />
-            {isRecording ? "Recording..." : "Start Recording"}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={startRecording}
+              disabled={isRecording || isProcessing}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-semibold transition-all ${
+                isRecording
+                  ? "bg-blue-300 text-white"
+                  : "bg-blue-500 hover:bg-blue-600 text-white"
+              } disabled:opacity-50`}
+            >
+              <Mic className="w-5 h-5" />
+              {isRecording ? "Recording..." : "Start Recording"}
+            </button>
+            <button
+              onClick={stopRecording}
+              disabled={!isRecording}
+              className="flex-1 flex items-center justify-center gap-2 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold disabled:opacity-50"
+            >
+              <Square className="w-4 h-4" />
+              Stop
+            </button>
+          </div>
+
+          {(isProcessing || sttError) && (
+            <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded-lg p-2">
+              {isProcessing && <div>Processing audio...</div>}
+              {sttError && <div className="text-red-600">Mic/STT: {sttError}</div>}
+            </div>
+          )}
 
           <div className="flex gap-2">
             <button
@@ -125,13 +192,23 @@ export function MainLayout({ user, onLogout }) {
       <div className="flex-1 relative">
         <NotesCanvas
           notes={notes}
-          onAddNote={handleAddNote}
-          isRecording={isRecording}
+          isRecording={isRecording || isProcessing}
+          onMoveNote={handleMoveNote}
+          onDeleteNote={handleDeleteNote}
+          onEditNote={handleEditNote}
+          onCompleteNote={handleCompleteNote}
         />
       </div>
 
       {/* Undo Toast */}
       {showUndoToast && <UndoToast />}
+
+      <NoteEditorModal
+        note={editingNote}
+        isOpen={!!editingNote}
+        onClose={() => setEditingNote(null)}
+        onSave={handleSaveEdit}
+      />
     </div>
   );
 }

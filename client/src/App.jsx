@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { AuthPage } from "./components/AuthPage";
 import { MainLayout } from "./components/MainLayout";
 import { useIndexedDB } from "./hooks/useIndexedDB";
 
@@ -9,16 +8,16 @@ function App() {
   const { db } = useIndexedDB();
 
   useEffect(() => {
-    // Check if user is already logged in
-    const storedUser = localStorage.getItem("stickyAiUser");
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        console.error("Failed to parse user:", e);
-        localStorage.removeItem("stickyAiUser");
-      }
-    }
+    // Always run with a default dev user (auth bypass)
+    const defaultUser = {
+      uid: "dev-user",
+      email: "dev@example.com",
+      name: "Dev User",
+      token: "dev-token",
+    };
+    localStorage.setItem("stickyAiUser", JSON.stringify(defaultUser));
+    localStorage.setItem("stickyAiToken", defaultUser.token);
+    setUser(defaultUser);
     setLoading(false);
   }, []);
 
@@ -34,13 +33,7 @@ function App() {
   }
 
   return (
-    <>
-      {!user ? (
-        <AuthPage onAuthSuccess={setUser} />
-      ) : (
-        <MainLayout user={user} onLogout={() => setUser(null)} />
-      )}
-    </>
+    <MainLayout user={user} onLogout={() => setUser(null)} />
   );
 }
 

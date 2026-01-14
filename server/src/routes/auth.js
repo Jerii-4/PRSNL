@@ -4,11 +4,22 @@ import bcryptjs from "bcryptjs";
 import { createUser, getUserByEmail } from "../services/firebaseService.js";
 import { verifyToken } from "../middleware/auth.js";
 
+const DISABLE_AUTH = process.env.DISABLE_AUTH === "true";
+
 const router = express.Router();
 
 // Register
 router.post("/register", async (req, res) => {
   try {
+    if (DISABLE_AUTH) {
+      return res.status(201).json({
+        uid: "dev-user",
+        email: req.body.email || "dev@example.com",
+        name: req.body.name || "Dev User",
+        token: "dev-token",
+      });
+    }
+
     const { email, password, name } = req.body;
 
     if (!email || !password || !name) {
@@ -61,6 +72,15 @@ router.post("/register", async (req, res) => {
 // Login
 router.post("/login", async (req, res) => {
   try {
+    if (DISABLE_AUTH) {
+      return res.json({
+        uid: "dev-user",
+        email: req.body.email || "dev@example.com",
+        name: "Dev User",
+        token: "dev-token",
+      });
+    }
+
     const { email, password } = req.body;
 
     if (!email || !password) {

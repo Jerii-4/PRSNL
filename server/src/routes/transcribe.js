@@ -33,13 +33,14 @@ router.post(
         // Use Vosk for transcription (requires vosk CLI or library)
         // For now, we return a simulated transcription
         // In production, install and use: npm install vosk
-        const transcript = "Voice transcription using Vosk model";
+        // Return placeholder transcript for now
+        const transcript = "Your recorded voice note";
 
         res.json({
           success: true,
           transcript: transcript,
-          confidence: 0.85,
-          engine: "vosk",
+          confidence: 0.5,
+          engine: "vosk-placeholder",
         });
 
         // Clean up temp file

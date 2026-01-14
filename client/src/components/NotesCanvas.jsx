@@ -1,7 +1,14 @@
 import { StickyNote } from "./StickyNote";
 import { useState } from "react";
 
-export function NotesCanvas({ notes, onAddNote, isRecording }) {
+export function NotesCanvas({
+  notes,
+  isRecording,
+  onMoveNote,
+  onDeleteNote,
+  onEditNote,
+  onCompleteNote,
+}) {
   const [draggedNote, setDraggedNote] = useState(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
 
@@ -20,7 +27,7 @@ export function NotesCanvas({ notes, onAddNote, isRecording }) {
 
     const newX = e.clientX - offset.x;
     const newY = e.clientY - offset.y;
-    // Update position
+    onMoveNote?.(draggedNote, { x: newX, y: newY });
   };
 
   const handleMouseUp = () => {
@@ -69,7 +76,12 @@ export function NotesCanvas({ notes, onAddNote, isRecording }) {
           }}
           onMouseDown={(e) => handleMouseDown(e, note.id)}
         >
-          <StickyNote note={note} />
+          <StickyNote
+            note={note}
+            onDelete={onDeleteNote}
+            onEdit={onEditNote}
+            onComplete={onCompleteNote}
+          />
         </div>
       ))}
     </div>

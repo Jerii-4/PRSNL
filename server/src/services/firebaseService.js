@@ -49,7 +49,7 @@ export function getFirestoreDB() {
 
 export async function saveNote(userId, note) {
   try {
-    const docRef = await db
+    await db
       .collection("users")
       .doc(userId)
       .collection("notes")
